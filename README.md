@@ -62,5 +62,4 @@ This repository is licensed under the MIT License. You are free to use, modify, 
 
 ## Contact
 For inquiries or feedback, please feel free to reach out:
-
 Email: rajeshprasad859747@gmail.com
