@@ -9,7 +9,6 @@ Welcome to the **Information Security Projects** repository! This collection sho
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
-- [License](#license)
 - [Contact](#contact)
 
 ## Overview
@@ -56,9 +55,6 @@ Refer to the respective project folders for detailed usage instructions.
 
 ## Contributing
 As this repository serves as a personal project showcase, contributions are not currently accepted. However, you are welcome to fork the repository and explore the code for your own learning and experimentation.
-
-## License
-This repository is licensed under the MIT License. You are free to use, modify, and distribute the code, provided that appropriate attribution is given.
 
 ## Contact
 For inquiries or feedback, please feel free to reach out:
