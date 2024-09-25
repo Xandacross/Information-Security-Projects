@@ -47,10 +47,10 @@ To set up this repository on your local machine, follow these steps:
 3. Follow the specific instructions provided in the project subdirectories for setup and configuration.
 
 ## Usage
-### TCP Client and Server
+- **TCP Client and Server**
 Launch the server application first, followed by the client application to establish a connection and facilitate message exchange.
 
-### Nmap Scanner and Banner Grabber
+- **Nmap Scanner and Banner Grabber**
 Execute the script to perform network scans and extract banners from detected services.
 Refer to the respective project folders for detailed usage instructions.
 
