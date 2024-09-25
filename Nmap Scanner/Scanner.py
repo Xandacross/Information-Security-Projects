@@ -4,91 +4,108 @@ import socket
 # Initialize the Nmap scanner
 scanner = nmap.PortScanner()
 
-def validate_ip(ip):
+def validate_ip_or_domain(input_str):
     """
-    Validates the provided IP address.
+    Validates the provided input, checking if it's an IP address or a domain name.
     
     Parameters:
-        ip (str): The IP address to validate.
+        input_str (str): The input to validate.
 
     Returns:
-        bool: True if the IP address is valid, False otherwise.
+        str: The resolved IP address if valid, or None if invalid.
     """
     try:
-        socket.inet_aton(ip)  # Validate IP format
-        return True
+        # Try to resolve a domain name to an IP address
+        ip = socket.gethostbyname(input_str)
+        return ip
     except socket.error:
-        return False
+        # If that fails, try validating as an IP address
+        try:
+            socket.inet_aton(input_str)  # Validate IP format
+            return input_str
+        except socket.error:
+            return None
 
-# Prompt user for the IP address
-ip = input("Enter the IP address: ")
-
-# Validate the entered IP address
-if not validate_ip(ip):
-    print("Invalid IP address")
-    exit()
-
-print("Entered IP address:", ip)
-
-# Prompt user for the scan type
-choice = input("""\nEnter the type of scan you want to perform:
-                1) SYN ACK Scan
-                2) UDP Scan
-                3) Comprehensive Scan\n""")
-
-print("Selected Choice:", choice)
-
-# SYN ACK Scan
-if choice == "1":
+def perform_scan(ip, scan_type):
+    """
+    Performs a scan based on the scan type.
+    
+    Parameters:
+        ip (str): The IP address to scan.
+        scan_type (str): The type of scan to perform.
+    """
     try:
         print("Nmap version:", scanner.nmap_version())
-        scanner.scan(ip, '1-1024', '-sS')  # Perform SYN ACK scan
         
-        print(scanner.scaninfo())
-        print("IP status:", scanner[ip].state())
-        print("Available Protocols:", scanner[ip].all_protocols())
+        # Dictionary to map scan types to Nmap arguments
+        scan_commands = {
+            "1": '-sS',  # SYN ACK Scan
+            "2": '-sU',  # UDP Scan
+            "3": '-sS -sV -sC -A -O'  # Comprehensive Scan with service version detection
+        }
         
-        if 'tcp' in scanner[ip].all_protocols():
-            print("Open TCP Ports:", scanner[ip]['tcp'].keys())
+        if scan_type in scan_commands:
+            scanner.scan(ip, '1-1024', scan_commands[scan_type])
+            print(scanner.scaninfo())
+            
+            # Check if IP is present in the scan result
+            if ip not in scanner.all_hosts():
+                print(f"No results for IP: {ip}")
+                return
+            
+            print("IP status:", scanner[ip].state())
+            print("Available Protocols:", scanner[ip].all_protocols())
+
+            # Check for TCP and UDP protocols
+            if 'tcp' in scanner[ip]:
+                print("\nOpen TCP Ports and Services:")
+                for port in scanner[ip]['tcp'].keys():
+                    state = scanner[ip]['tcp'][port]['state']
+                    service = scanner[ip]['tcp'][port].get('name', 'Unknown')
+                    product = scanner[ip]['tcp'][port].get('product', 'Unknown')
+                    version = scanner[ip]['tcp'][port].get('version', 'Unknown')
+                    print(f"Port {port}: {state} - Service: {service} (Product: {product}, Version: {version})")
+            else:
+                print("No open TCP ports found.")
+                
+            if 'udp' in scanner[ip]:
+                print("\nOpen UDP Ports and Services:")
+                for port in scanner[ip]['udp'].keys():
+                    state = scanner[ip]['udp'][port]['state']
+                    service = scanner[ip]['udp'][port].get('name', 'Unknown')
+                    product = scanner[ip]['udp'][port].get('product', 'Unknown')
+                    version = scanner[ip]['udp'][port].get('version', 'Unknown')
+                    print(f"Port {port}: {state} - Service: {service} (Product: {product}, Version: {version})")
+            else:
+                print("No open UDP ports found.")
         else:
-            print("No open TCP ports found.")
+            print("Invalid scan type selected.")
+    
     except Exception as e:
         print(f"An error occurred: {e}")
 
-# UDP Scan
-elif choice == "2":
-    try:
-        print("Nmap version:", scanner.nmap_version())
-        scanner.scan(ip, '1-1024', '-sU')  # Perform UDP scan
-        
-        print(scanner.scaninfo())
-        print("IP status:", scanner[ip].state())
-        print("Available Protocols:", scanner[ip].all_protocols())
-        
-        if 'udp' in scanner[ip].all_protocols():
-            print("Open UDP Ports:", scanner[ip]['udp'].keys())
-        else:
-            print("No open UDP ports found.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+def main():
+    # Prompt user for the IP address or domain name
+    input_str = input("Enter the IP address or domain name: ")
 
-# Comprehensive Scan
-elif choice == "3":
-    try:
-        print("Nmap version:", scanner.nmap_version())
-        scanner.scan(ip, '1-1024', '-sS -sV -sC -A -O')  # Comprehensive scan
-        
-        print(scanner.scaninfo())
-        print("IP status:", scanner[ip].state())
-        print("Available Protocols:", scanner[ip].all_protocols())
-        
-        if 'tcp' in scanner[ip].all_protocols():
-            print("Open TCP Ports:", scanner[ip]['tcp'].keys())
-        else:
-            print("No open TCP ports found.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    # Validate the entered input and resolve to IP address
+    ip = validate_ip_or_domain(input_str)
+    if not ip:
+        print("Invalid IP address or domain name")
+        return
 
-# Handle invalid scan choice
-else:
-    print("Enter a valid option.")
+    print("Resolved IP address:", ip)
+
+    # Prompt user for the scan type
+    choice = input("""\nEnter the type of scan you want to perform:
+                    1) SYN ACK Scan
+                    2) UDP Scan
+                    3) Comprehensive Scan\n""")
+
+    print("Selected Choice:", choice)
+
+    # Perform the scan
+    perform_scan(ip, choice)
+
+# Run the main function
+main()
